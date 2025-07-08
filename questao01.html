@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Produtos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+    }
+
+    table {
+      width: 80%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    thead {
+      background-color: #f2f2f2;
+    }
+
+    .acima-media {
+      background-color: #c9f7c9;
+    }
+
+    .mais-caro {
+      background-color: #ffd700;
+    }
+
+    .mais-barato {
+      background-color: #add8e6;
+    }
+
+    #loading {
+      font-weight: bold;
+      color: blue;
+    }
+
+    #erro {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body onload="carregarProdutos()">
+  <h1>Produtos</h1>
+  <div id="loading">Carregando produtos...</div>
+  <div id="resultado"></div>
+
+  <script>
+    // 1. Criação da Promise
+    function gerarProdutos() {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const numero = Math.floor(Math.random() * 100);
+          if (numero % 2 === 0) {
+            const produtos = Array.from({ length: 10 }, (_, i) => ({
+              id: i + 1,
+              nome: `Produto ${i + 1}`,
+              tipo: `Tipo ${i % 3 + 1}`,
+              preco: parseFloat((Math.random() * 100 + 10).toFixed(2)) // entre 10 e 110
+            }));
+            resolve(produtos);
+          } else {
+            reject({ res: "ERROR", msg: "ERRO NO SISTEMA" });
+          }
+        }, 4000);
+      });
+    }
+
+    // 2. Consumo da Promise com async/await
+    async function carregarProdutos() {
+      try {
+        const produtos = await gerarProdutos();
+        document.getElementById("loading").style.display = "none";
+        mostrarTabela(produtos);
+      } catch (erro) {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("resultado").innerHTML =
+          `<p id="erro">${erro.msg}</p>`;
+      }
+    }
+
+    // 3. Geração da Tabela + Estatísticas
+    function mostrarTabela(produtos) {
+      const media = produtos.reduce((acc, p) => acc + p.preco, 0) / produtos.length;
+      const maisCaro = Math.max(...produtos.map(p => p.preco));
+      const maisBarato = Math.min(...produtos.map(p => p.preco));
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Tipo</th>
+              <th>Preço (R$)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      produtos.forEach(produto => {
+        const classes = [];
+
+        if (produto.preco > media) classes.push("acima-media");
+        if (produto.preco === maisCaro) classes.push("mais-caro");
+        if (produto.preco === maisBarato) classes.push("mais-barato");
+
+        html += `
+          <tr class="${classes.join(" ")}">
+            <td>${produto.id}</td>
+            <td>${produto.nome}</td>
+            <td>${produto.tipo}</td>
+            <td>${produto.preco.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+        <p><strong>Média de preços:</strong> R$ ${media.toFixed(2)}</p>
+        <p><strong>Produto mais caro:</strong> R$ ${maisCaro.toFixed(2)}</p>
+        <p><strong>Produto mais barato:</strong> R$ ${maisBarato.toFixed(2)}</p>
+      `;
+
+      document.getElementById("resultado").innerHTML = html;
+    }
+  </script>
+</body>
+</html>

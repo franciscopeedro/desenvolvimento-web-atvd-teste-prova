@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Memória</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+
+    td {
+      width: 100px;
+      height: 100px;
+      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .revelado img {
+      display: block;
+    }
+
+    .fixo {
+      background-color: #d4edda;
+      cursor: default;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo da Memória</h1>
+  <h2 id="pontuacao">Pontos: 0</h2>
+  <table id="tabuleiro"></table>
+
+  <script>
+    const imagens = [
+      'https://formica-api.s3-sa-east-1.amazonaws.com/images/produtos/large/L101.jpg', // vermelha
+      'https://wallpapers.com/images/hd/plain-green-background-2nivvcgq8a68wog8.jpg', // verde
+      'https://formica-api.s3-sa-east-1.amazonaws.com/images/produtos/large/L117.jpg', // azul
+      'https://hipertintas.vteximg.com.br/arquivos/ids/158054-300-300/Amarelo-Frevo-Coral.png?v=638737687859900000', // amarelo
+      'https://images.tcdn.com.br/img/img_prod/898929/tecido_tricoline_liso_rosa_pink_50cm_x_1_50mt_83_1_ca9570698d4bafeb13755f3351c54116.png', // rosa
+      'https://encycolorpedia.pt/008b8b.png', // ciano
+      'https://regattatecidos.vteximg.com.br/arquivos/ids/156516/1.06.09.840999---PRETO.jpg?v=637516923780300000', // preto
+      'https://cdn.awsli.com.br/998/998959/produto/189681099/s706-fu3d8l6e0g.jpg'  // cinza
+    ];
+
+    let cartas = [...imagens, ...imagens]; // duplica as imagens
+    cartas.sort(() => Math.random() - 0.5); // embaralha
+
+    const tabuleiro = document.getElementById("tabuleiro");
+    let primeira = null;
+    let segunda = null;
+    let bloqueado = false;
+    let pontos = 0;
+
+    function atualizarPontuacao() {
+      document.getElementById("pontuacao").textContent = `Pontos: ${pontos}`;
+    }
+
+    function criarTabuleiro() {
+      let index = 0;
+      for (let i = 0; i < 4; i++) {
+        const linha = tabuleiro.insertRow();
+        for (let j = 0; j < 4; j++) {
+          const celula = linha.insertCell();
+          const img = document.createElement("img");
+          img.src = cartas[index];
+          celula.appendChild(img);
+          celula.dataset.id = index;
+          celula.addEventListener("click", () => revelar(celula));
+          index++;
+        }
+      }
+    }
+
+    function revelar(celula) {
+      if (bloqueado || celula.classList.contains("revelado") || celula.classList.contains("fixo")) return;
+
+      celula.classList.add("revelado");
+
+      if (!primeira) {
+        primeira = celula;
+      } else {
+        segunda = celula;
+        verificar();
+      }
+    }
+
+    function verificar() {
+      bloqueado = true;
+
+      const img1 = primeira.querySelector("img").src;
+      const img2 = segunda.querySelector("img").src;
+
+      if (img1 === img2) {
+        primeira.classList.add("fixo");
+        segunda.classList.add("fixo");
+        pontos++;
+        atualizarPontuacao();
+        resetar();
+      } else {
+        setTimeout(() => {
+          primeira.classList.remove("revelado");
+          segunda.classList.remove("revelado");
+          resetar();
+        }, 1000);
+      }
+    }
+
+    function resetar() {
+      [primeira, segunda] = [null, null];
+      bloqueado = false;
+    }
+
+    criarTabuleiro();
+    atualizarPontuacao();
+  </script>
+</body>
+</html>
